@@ -19,8 +19,9 @@ do { \
     } \
 } while (0)
 #else
-#define CHECK(rv) \
+#define CHECK(call) \
 do { \
+    LONG rv = call; \
     if (rv != SCARD_S_SUCCESS) { \
         fprintf(stderr, "%s:%d - %s\n", __FILE__, __LINE__, pcsc_stringify_error(rv)); \
         exit(2); \
