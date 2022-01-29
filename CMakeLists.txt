@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.21)
+
+project(cardlock)
+
+find_package(Threads REQUIRED)
+
+if(WIN32)
+    add_library(PkgConfig::PCSCLITE INTERFACE IMPORTED)
+    target_link_libraries(PkgConfig::PCSCLITE INTERFACE winscard)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(PCSCLITE libpcsclite REQUIRED IMPORTED_TARGET)
+endif()
+
+add_executable(cardlock cardlock.c)
+target_link_libraries(cardlock PRIVATE PkgConfig::PCSCLITE)
+
+add_executable(cardlock_cancel cardlock_cancel.c)
+target_link_libraries(cardlock_cancel PRIVATE PkgConfig::PCSCLITE Threads::Threads)
