@@ -2,7 +2,10 @@
 #define COMMON_H
 
 #include <stdio.h>
-#ifndef _WIN32
+#ifdef __APPLE__
+#include <PCSC/winscard.h>
+#include <PCSC/wintypes.h>
+#else
 #include <winscard.h>
 #endif
 

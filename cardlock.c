@@ -8,8 +8,6 @@
 #include <unistd.h>
 #endif
 
-#include <winscard.h>
-
 #include "common.h"
 
 int main(int argc, char **argv)
@@ -17,7 +15,7 @@ int main(int argc, char **argv)
     SCARDCONTEXT context;
     SCARDHANDLE card;
 
-    LONG activeProtocol;
+    DWORD activeProtocol;
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <reader-name>\n", argv[0]);

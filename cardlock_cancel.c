@@ -9,8 +9,6 @@
 #include <pthread.h>
 #endif
 
-#include <winscard.h>
-
 #include "common.h"
 
 struct args {
@@ -29,7 +27,7 @@ run(void *arg)
     struct args *args = arg;
 
     SCARDHANDLE card;
-    LONG activeProtocol;
+    DWORD activeProtocol;
     fprintf(stderr, "connecting...\n");
     CHECK(SCardConnect(args->context, args->reader_name, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
 
@@ -46,15 +44,13 @@ int main(int argc, char **argv)
     CHECK(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &context));
 
     if (argc != 2) {
-        DWORD listSize = SCARD_AUTOALLOCATE;
-        char *readers;
-        CHECK(SCardListReaders(context, NULL, (char*)&readers, &listSize));
+        char readers[1024];
+        DWORD listSize = sizeof(readers);
+        CHECK(SCardListReaders(context, NULL, readers, &listSize));
 
         for (const char *p = readers; *p; p += strlen(p) + 1) {
             printf("%s\n", p);
         }
-
-        CHECK(SCardFreeMemory(context, readers));
 
         fprintf(stderr, "Usage: %s <reader-name>\n", argv[0]);
         return 1;
