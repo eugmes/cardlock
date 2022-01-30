@@ -40,26 +40,26 @@ run(void *arg)
 int main(int argc, char **argv)
 {
     SCARDCONTEXT context;
+	char readers[1024];
+	const char *reader_name;
 
     CHECK(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &context));
 
     if (argc != 2) {
-        char readers[1024];
         DWORD listSize = sizeof(readers);
         CHECK(SCardListReaders(context, NULL, readers, &listSize));
 
-        for (const char *p = readers; *p; p += strlen(p) + 1) {
-            printf("%s\n", p);
-        }
-
-        fprintf(stderr, "Usage: %s <reader-name>\n", argv[0]);
-        return 1;
+		/* use the first reader name */
+		reader_name = readers;
     }
+	else
+		reader_name = argv[1];
 
+	fprintf(stderr, "Using reader: %s\n", reader_name);
 
     struct args thread_args = {
         .context = context,
-        .reader_name = argv[1],
+        .reader_name = reader_name,
     };
 
 #ifdef _WIN32
