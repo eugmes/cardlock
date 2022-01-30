@@ -90,7 +90,6 @@ int main(int argc, char **argv)
 #endif
     fprintf(stderr, "cancelling\n");
     CHECK(SCardCancel(context));
-    CHECK(SCardReleaseContext(context));
     fprintf(stderr, "done\n");
 
 #ifdef _WIN32
@@ -99,6 +98,8 @@ int main(int argc, char **argv)
 #else
     pthread_join(thread, NULL);
 #endif
+
+    CHECK(SCardReleaseContext(context));
 
     return 0;
 }
