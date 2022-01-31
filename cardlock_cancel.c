@@ -13,7 +13,6 @@
 
 struct args {
     SCARDCONTEXT context;
-    const char *reader_name;
 };
 
 static
@@ -26,22 +25,24 @@ run(void *arg)
 {
     struct args *args = arg;
 
-    SCARDHANDLE card;
-    DWORD activeProtocol;
-    fprintf(stderr, "connecting...\n");
-    CHECK(SCardConnect(args->context, args->reader_name, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
+#ifdef _WIN32
+    Sleep(5000);
+#else
+    sleep(5);
+#endif
 
-    fprintf(stderr, "connected\n");
-    CHECK(SCardDisconnect(card, SCARD_LEAVE_CARD));
-    fprintf(stderr, "disconnected\n");
+    fprintf(stderr, "cancelling\n");
+    CHECK(SCardCancel(args->context));
+    fprintf(stderr, "done\n");
+
     return 0;
 }
 
 int main(int argc, char **argv)
 {
     SCARDCONTEXT context;
-	char readers[1024];
-	const char *reader_name;
+    char readers[1024];
+    const char *reader_name;
 
     CHECK(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &context));
 
@@ -49,17 +50,16 @@ int main(int argc, char **argv)
         DWORD listSize = sizeof(readers);
         CHECK(SCardListReaders(context, NULL, readers, &listSize));
 
-		/* use the first reader name */
-		reader_name = readers;
+        /* use the first reader name */
+        reader_name = readers;
+    } else {
+        reader_name = argv[1];
     }
-	else
-		reader_name = argv[1];
 
-	fprintf(stderr, "Using reader: %s\n", reader_name);
+    fprintf(stderr, "Using reader: %s\n", reader_name);
 
     struct args thread_args = {
         .context = context,
-        .reader_name = reader_name,
     };
 
 #ifdef _WIN32
@@ -69,7 +69,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "CreateThread failed\n");
         return 10;
     }
-    Sleep(5000);
 #else
     pthread_t thread;
     pthread_attr_t attr;
@@ -85,12 +84,16 @@ int main(int argc, char **argv)
         perror("pthread_create");
         return 3;
     }
-
-    sleep(5);
 #endif
-    fprintf(stderr, "cancelling\n");
-    CHECK(SCardCancel(context));
-    fprintf(stderr, "done\n");
+
+    SCARDHANDLE card;
+    DWORD activeProtocol;
+    fprintf(stderr, "connecting...\n");
+    CHECK(SCardConnect(context, reader_name, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
+
+    fprintf(stderr, "connected\n");
+    CHECK(SCardDisconnect(card, SCARD_LEAVE_CARD));
+    fprintf(stderr, "disconnected\n");
 
 #ifdef _WIN32
     WaitForSingleObject(thread, INFINITE);
