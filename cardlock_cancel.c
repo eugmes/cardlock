@@ -41,22 +41,22 @@ run(void *arg)
 int main(int argc, char **argv)
 {
     SCARDCONTEXT context;
+    char readers[1024];
+    const char *reader_name;
 
     CHECK(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &context));
 
     if (argc != 2) {
-        char readers[1024];
         DWORD listSize = sizeof(readers);
         CHECK(SCardListReaders(context, NULL, readers, &listSize));
 
-        for (const char *p = readers; *p; p += strlen(p) + 1) {
-            printf("%s\n", p);
-        }
-
-        fprintf(stderr, "Usage: %s <reader-name>\n", argv[0]);
-        return 1;
+        /* use the first reader name */
+        reader_name = readers;
+    } else {
+        reader_name = argv[1];
     }
 
+    fprintf(stderr, "Using reader: %s\n", reader_name);
 
     struct args thread_args = {
         .context = context,
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     SCARDHANDLE card;
     DWORD activeProtocol;
     fprintf(stderr, "connecting...\n");
-    CHECK(SCardConnect(context, argv[1], SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
+    CHECK(SCardConnect(context, reader_name, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
 
     fprintf(stderr, "connected\n");
     CHECK(SCardDisconnect(card, SCARD_LEAVE_CARD));

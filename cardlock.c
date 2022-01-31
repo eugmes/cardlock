@@ -14,16 +14,25 @@ int main(int argc, char **argv)
 {
     SCARDCONTEXT context;
     SCARDHANDLE card;
+    char readers[1024];
+    const char *reader_name;
 
     DWORD activeProtocol;
 
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <reader-name>\n", argv[0]);
-        return 1;
-    }
-    const char *reader_name = argv[1];
-
     CHECK(SCardEstablishContext(SCARD_SCOPE_USER, NULL, NULL, &context));
+
+    if (argc != 2) {
+        DWORD listSize = sizeof(readers);
+        CHECK(SCardListReaders(context, NULL, readers, &listSize));
+
+        /* use the first reader name */
+        reader_name = readers;
+    } else {
+        reader_name = argv[1];
+    }
+
+    fprintf(stderr, "Using reader: %s\n", reader_name);
+
     fprintf(stderr, "connecting...\n");
     CHECK(SCardConnect(context, reader_name, SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &card, &activeProtocol));
 
