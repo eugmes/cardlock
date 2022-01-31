@@ -18,7 +18,7 @@ else()
 endif()
 
 if(MSYS)
-	add_compile_options(-mwin32)
+    add_compile_options(-mwin32)
 endif()
 
 add_executable(cardlock cardlock.c)
